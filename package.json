@@ -1,0 +1,25 @@
+{
+  "name": "pulumi-aws-toolbox",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6",
+    "@pulumi/aws-native": "^0.108.0",
+    "@pulumi/pulumi": "^3"
+  },
+  "devDependencies": {
+    "@types/node": ">=18",
+    "typescript": ">=5"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ]
+}
