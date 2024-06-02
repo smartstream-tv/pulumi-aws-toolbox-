@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.2.0...v0.2.1) (2024-06-02)
+
+
+### Bug Fixes
+
+* missing github permission ([9dfdab7](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/9dfdab7a826ff5f8c4c60abc44889b4aaaef280b))
+
 ## 0.2.0 (2024-06-02)
 
 
