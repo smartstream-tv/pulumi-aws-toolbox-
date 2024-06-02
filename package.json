@@ -1,5 +1,8 @@
 {
   "name": "@smartstream-tv/pulumi-aws-toolbox",
+  "repository": {
+    "url": "https://github.com/smartstream-tv/pulumi-aws-toolbox"
+  },
   "scripts": {
     "build": "rm -rf ./dist && npm i && tsc"
   },
