@@ -1,4 +1,4 @@
-# pulumi-aws-toolbox
+# Pulumi AWS Toolbox
 
 The Pulumi AWS Toolbox is an opinionated library containing components to build the infrastructure for website projects.
 
