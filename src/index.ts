@@ -1,1 +1,1 @@
-export { getSecret } from "./util/ssm";
+export * from "./util/ssm";
