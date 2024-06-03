@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.2.3...v0.3.0) (2024-06-03)
+
+
+### Features
+
+* introduced Vpc and Website components ([b51798b](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/b51798bb827fa9cfd3e2ed990cfb3d5d4ac22cc2))
+
 ## [0.2.3](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.2.2...v0.2.3) (2024-06-02)
 
 
