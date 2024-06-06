@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.4.0...v0.4.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* installing pulumi-s3-login as executable ([f34cfda](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/f34cfdaf56aa272e37035501400c3fe453011243))
+
 ## [0.4.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.3.0...v0.4.0) (2024-06-06)
 
 
