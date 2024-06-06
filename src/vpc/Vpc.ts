@@ -88,7 +88,7 @@ export class Vpc extends ComponentResource {
     private createPublicSubnet(az: string, vpc: aws.ec2.Vpc, internetGateway: aws.ec2.InternetGateway) {
         const name = `${this.name}-${az}-public`;
         const subnetIndex = az.charCodeAt(0) - 'a'.charCodeAt(0); // a->0, b->1 etc.
-        const ipv4CidrBlock = `10.0.${subnetIndex * 4}.0/22`;
+        const ipv4CidrBlock = this.computeSubnetIpv4Cidr(subnetIndex);
         const ipv6CidrBlock = vpc.ipv6CidrBlock.apply(vpcCidr => vpcCidr.replace("00::/56", `0${subnetIndex}::/64`));
 
         const subnet = new aws.ec2.Subnet(name, {
@@ -101,7 +101,10 @@ export class Vpc extends ComponentResource {
             tags: {
                 Name: name
             },
-        }, { parent: this });
+        }, {
+            parent: this,
+            deleteBeforeReplace: true,
+        });
 
         const routeTable = new aws.ec2.RouteTable(name, {
             vpcId: vpc.id,
@@ -133,15 +136,7 @@ export class Vpc extends ComponentResource {
     private createPrivateSubnet(az: string, vpc: aws.ec2.Vpc, ipv6EgressGateway: aws.ec2.EgressOnlyInternetGateway) {
         const name = `${this.name}-${az}-private`;
         const subnetIndex = (az.charCodeAt(0) - 'a'.charCodeAt(0)) + 3; // a->3, b->4 etc.
-
-        // ipv4MaskBits 24 -> 1
-        // ipv4MaskBits 23 -> 2
-        // ipv4MaskBits 22 -> 4
-        // ipv4MaskBits 21 -> 8
-        // ipv4MaskBits 20 -> 16
-        const ipv4IndexMultiplier = Math.pow(2, 24 - this.ipv4MaskBits);
-
-        const ipv4CidrBlock = `10.0.${subnetIndex * ipv4IndexMultiplier}.0/${this.ipv4MaskBits}`;
+        const ipv4CidrBlock = this.computeSubnetIpv4Cidr(subnetIndex);
         const ipv6CidrBlock = vpc.ipv6CidrBlock.apply(vpcCidr => vpcCidr.replace("00::/56", `0${subnetIndex}::/64`));
 
         const subnet = new aws.ec2.Subnet(name, {
@@ -154,7 +149,10 @@ export class Vpc extends ComponentResource {
             tags: {
                 Name: name
             },
-        }, { parent: this });
+        }, {
+            parent: this,
+            deleteBeforeReplace: true,
+        });
 
         const routeTable = new aws.ec2.RouteTable(name, {
             vpcId: vpc.id,
@@ -190,6 +188,16 @@ export class Vpc extends ComponentResource {
             toPort: 22,
             referencedSecurityGroupId: this.eicSecurityGroup.id,
         }, { parent: this });
+    }
+
+    private computeSubnetIpv4Cidr(subnetIndex: number) {
+        // ipv4MaskBits 24 -> 1
+        // ipv4MaskBits 23 -> 2
+        // ipv4MaskBits 22 -> 4
+        // ipv4MaskBits 21 -> 8
+        // ipv4MaskBits 20 -> 16
+        const multiplier = Math.pow(2, 24 - this.ipv4MaskBits);
+        return `10.0.${subnetIndex * multiplier}.0/${this.ipv4MaskBits}`;
     }
 
     private createInstanceConnectEndpoint(subnetId: Output<string>) {
