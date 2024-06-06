@@ -6,6 +6,8 @@ import { CloudfrontChainedFunction } from "./CloudfrontChainedFunction";
 
 /**
  * Optionionated way of building a static website using CloudFront and S3.
+ * 
+ * The assets are loaded from an assets bucket. Usually, this is where the CI has deployed your frontend to.
  */
 export class StaticWebsite extends ComponentResource {
     readonly assetsBucketName: pulumi.Output<string>;
@@ -20,7 +22,7 @@ export class StaticWebsite extends ComponentResource {
         this.args = args;
         this.name = name;
 
-        if (!args.assetsPath.startsWith('/') || args.assetsPath.endsWith('/')) {
+        if (!args.assetsBucketPath.startsWith('/') || args.assetsBucketPath.endsWith('/')) {
             throw new Error(`Illegal assetsPath`);
         }
 
@@ -107,7 +109,7 @@ export class StaticWebsite extends ComponentResource {
                 originId: assetsOriginId,
                 domainName: assetsBucket.bucketRegionalDomainName,
                 originAccessControlId: oac.id,
-                originPath: args.assetsPath,
+                originPath: args.assetsBucketPath,
             }],
             originGroups: [],
             enabled: true,
@@ -184,7 +186,7 @@ export class StaticWebsite extends ComponentResource {
 
     private createAssetsBucket() {
         const bucket = new aws.s3.Bucket(`${this.name}`, {
-            bucket: `${this.name}-${getAccountId()}`,
+            bucket: `${this.name}-assests-${getAccountId()}`,
             versioning: {
                 enabled: true
             },
@@ -214,7 +216,7 @@ export class StaticWebsite extends ComponentResource {
      */
     createBucketReadPolicyStatement(bucketName: pulumi.Output<string>) {
         return {
-            sid: `CloudFront-Read-${this.args.assetsPath}`,
+            sid: `CloudFront-Read-${this.args.assetsBucketPath}`,
             principals: [{
                 type: "Service",
                 identifiers: ["cloudfront.amazonaws.com"],
@@ -225,7 +227,7 @@ export class StaticWebsite extends ComponentResource {
             ],
             resources: [
                 pulumi.interpolate`arn:aws:s3:::${bucketName}`,
-                pulumi.interpolate`arn:aws:s3:::${bucketName}${this.args.assetsPath}/*`,
+                pulumi.interpolate`arn:aws:s3:::${bucketName}${this.args.assetsBucketPath}/*`,
             ],
             conditions: [
                 {
@@ -246,6 +248,8 @@ export interface WebsiteArgs {
      */
     readonly acmCertificateArn_usEast1: string;
 
+    readonly apiEndpoint?: pulumi.Output<string>;
+
     /**
      * Optionally, overwrite the bucket to be used for assets.
      * Useful if
@@ -259,11 +263,11 @@ export interface WebsiteArgs {
     /**
      * The path inside the assets bucket from where the website's static files should be loaded from.
      * Must start with a slash, end without a slash.
-     * 
-     * Usually this is a path where the CI has deployed the frontend assets to.
      * Example: "/frontend/abcd1234"
      */
-    readonly assetsPath: string;
+    readonly assetsBucketPath: string;
+
+    readonly assetOverrides?: ManualAsset[];
 
     /**
      * Optionally, protects the website with HTTP basic auth.
@@ -279,6 +283,12 @@ export interface WebsiteArgs {
     readonly hostedZoneId: string;
 
     readonly subDomain?: string;
+}
+
+export interface ManualAsset {
+    readonly path: string;
+    readonly content: string | pulumi.Output<string>;
+    readonly contentType: string;
 }
 
 export interface BasicAuthArgs {
