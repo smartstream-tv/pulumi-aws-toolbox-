@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.4.1...v0.5.0) (2024-06-06)
+
+
+### Features
+
+* added SesProxyMailer ([f21343d](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/f21343d2f82fcebd47fbb9cc053551585bc048cd))
+
+
+### Bug Fixes
+
+* Vpc public subnet cidr collision ([b83a790](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/b83a79060ef18f698ac33d6e091030db73a77ed3))
+
 ## [0.4.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.4.0...v0.4.1) (2024-06-06)
 
 
