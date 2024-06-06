@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.3.0...v0.4.0) (2024-06-06)
+
+
+### Features
+
+* pulumi-s3-login script ([f6161b6](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/f6161b67f8f1433ddb4cf042a1da68ac9b31efd6))
+
 ## [0.3.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.2.3...v0.3.0) (2024-06-03)
 
 
