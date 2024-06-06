@@ -12,9 +12,17 @@ export class StaticWebsite extends ComponentResource {
     readonly name: string;
     readonly domain: pulumi.Output<string>;
 
+    private args: WebsiteArgs;
+    private distribution: aws.cloudfront.Distribution;
+
     constructor(name: string, args: WebsiteArgs, opts?: ComponentResourceOptions) {
         super("pat:StaticWebsite", name, args, opts);
+        this.args = args;
         this.name = name;
+
+        if (!args.assetsPath.startsWith('/') || args.assetsPath.endsWith('/')) {
+            throw new Error(`Illegal assetsPath`);
+        }
 
         const assetsBucket = args.assetsBucket || this.createAssetsBucket();
         this.assetsBucketName = assetsBucket.bucket;
@@ -94,7 +102,7 @@ export class StaticWebsite extends ComponentResource {
             functionAssociations: [viewerRequestFunc.toAssociation(), immutableResponseFunc.toAssociation()],
         }));
 
-        const distribution = new aws.cloudfront.Distribution(name, {
+        this.distribution = new aws.cloudfront.Distribution(name, {
             origins: [{
                 originId: assetsOriginId,
                 domainName: assetsBucket.bucketRegionalDomainName,
@@ -139,8 +147,15 @@ export class StaticWebsite extends ComponentResource {
         if (args.assetsBucket == null) {
             new aws.s3.BucketPolicy(`${name}`, {
                 bucket: assetsBucket.id,
-                policy: this.getBucketReadPolicy(assetsBucket, `${args.assetsPath}/*`, distribution),
-            }, { parent: this, dependsOn: [assetsBucketPublicAccess!] });
+                policy: aws.iam.getPolicyDocumentOutput({
+                    statements: [
+                        this.createBucketReadPolicyStatement(assetsBucket.bucket)
+                    ],
+                }).json,
+            }, {
+                parent: this,
+                dependsOn: [assetsBucketPublicAccess!]
+            });
         }
 
         // DNS records
@@ -151,7 +166,7 @@ export class StaticWebsite extends ComponentResource {
             type: "A",
             aliases: [{
                 zoneId: cloudfrontZoneId,
-                name: distribution.domainName,
+                name: this.distribution.domainName,
                 evaluateTargetHealth: false
             }]
         }, { parent: this });
@@ -161,7 +176,7 @@ export class StaticWebsite extends ComponentResource {
             type: "AAAA",
             aliases: [{
                 zoneId: cloudfrontZoneId,
-                name: distribution.domainName,
+                name: this.distribution.domainName,
                 evaluateTargetHealth: false
             }]
         }, { parent: this });
@@ -194,32 +209,32 @@ export class StaticWebsite extends ComponentResource {
         return bucket;
     }
 
-    private getBucketReadPolicy(bucket: aws.s3.Bucket, path: string, distribution: aws.cloudfront.Distribution) {
-        const policyDoc = aws.iam.getPolicyDocumentOutput({
-            statements: [{
-                sid: `CloudFront-Read-${path}`,
-                principals: [{
-                    type: "Service",
-                    identifiers: ["cloudfront.amazonaws.com"],
-                }],
-                actions: [
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                ],
-                resources: [
-                    pulumi.interpolate`${bucket.arn}`,
-                    pulumi.interpolate`${bucket.arn}${path}`,
-                ],
-                conditions: [
-                    {
-                        test: "StringEquals",
-                        variable: "AWS:SourceArn",
-                        values: [distribution.arn],
-                    }
-                ],
-            }]
-        });
-        return policyDoc.apply(policyDoc => policyDoc.json);
+    /**
+     * Generates an IAM policy statement that allows CloudFront to read the assets from the assets bucket.
+     */
+    createBucketReadPolicyStatement(bucketName: pulumi.Output<string>) {
+        return {
+            sid: `CloudFront-Read-${this.args.assetsPath}`,
+            principals: [{
+                type: "Service",
+                identifiers: ["cloudfront.amazonaws.com"],
+            }],
+            actions: [
+                "s3:GetObject",
+                "s3:ListBucket",
+            ],
+            resources: [
+                pulumi.interpolate`arn:aws:s3:::${bucketName}`,
+                pulumi.interpolate`arn:aws:s3:::${bucketName}${this.args.assetsPath}/*`,
+            ],
+            conditions: [
+                {
+                    test: "StringEquals",
+                    variable: "AWS:SourceArn",
+                    values: [this.distribution.arn],
+                }
+            ],
+        };
     }
 
 }
@@ -227,20 +242,26 @@ export class StaticWebsite extends ComponentResource {
 
 export interface WebsiteArgs {
     /**
-     * ARN of the HTTPS certifiacte.
+     * ARN of the HTTPS certificate. The ACM certificate must be created in the us-east-1 region!
      */
     readonly acmCertificateArn_usEast1: string;
 
     /**
-     * Optionally, overwrites the bucket to be used for assets.
-     * Useful if bucket should be shared by several dev stacks and must exist for CI during build phase.
+     * Optionally, overwrite the bucket to be used for assets.
+     * Useful if
+     *  - the bucket should be shared by several dev stacks and must therefore already exist during the CI build phase.
+     *  - additional settings/permissions should configured for the bucket (like cross-account access from prod)
+     * 
+     * If this is specified you must make sure the bucket as a resource policy that allows read access from CloudFront (you can use createBucketReadPolicyStatement).
      */
     readonly assetsBucket?: aws.s3.Bucket;
 
     /**
      * The path inside the assets bucket from where the website's static files should be loaded from.
-     * Must start with a slash.
-     * Example: "/frontend/abcd1234/"
+     * Must start with a slash, end without a slash.
+     * 
+     * Usually this is a path where the CI has deployed the frontend assets to.
+     * Example: "/frontend/abcd1234"
      */
     readonly assetsPath: string;
 
