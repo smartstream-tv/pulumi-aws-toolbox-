@@ -3,9 +3,11 @@
   "repository": {
     "url": "https://github.com/smartstream-tv/pulumi-aws-toolbox"
   },
-  "scripts": {
-    "build": "tsc",
+  "bin": {
     "pulumi-s3-login": "./bin/pulumi-s3-login.sh"
+  },
+  "scripts": {
+    "build": "tsc"
   },
   "dependencies": {
     "@pulumi/aws": "^6",
