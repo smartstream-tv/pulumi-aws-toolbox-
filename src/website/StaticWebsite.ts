@@ -19,7 +19,7 @@ export class StaticWebsite extends ComponentResource {
     private distribution: aws.cloudfront.Distribution;
 
     constructor(name: string, args: WebsiteArgs, opts?: ComponentResourceOptions) {
-        super("pat:StaticWebsite", name, args, opts);
+        super("pat:website:StaticWebsite", name, args, opts);
         this.args = args;
         this.name = name;
 

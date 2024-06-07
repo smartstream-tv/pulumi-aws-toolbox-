@@ -31,7 +31,7 @@ export class Vpc extends ComponentResource {
     private readonly vpc: aws.ec2.Vpc;
 
     constructor(name: string, args: NetworkArgs, opts?: ComponentResourceOptions) {
-        super("pat:Vpc", name, args, opts);
+        super("pat:vpc:Vpc", name, args, opts);
         this.cidrIpv4 = "10.0.0.0/16";
         this.name = name;
 

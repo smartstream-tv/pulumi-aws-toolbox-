@@ -7,7 +7,7 @@ export class StdSecurityGroup extends ComponentResource {
     readonly securityGroupId: Output<string>;
 
     constructor(name: string, args: StdSecurityGroupArgs, opts?: ComponentResourceOptions) {
-        super("pat:StdSecurityGroup", name, args, opts);
+        super("pat:vpc:StdSecurityGroup", name, args, opts);
         this.name = name;
 
         const sg = new aws.ec2.SecurityGroup(name, {

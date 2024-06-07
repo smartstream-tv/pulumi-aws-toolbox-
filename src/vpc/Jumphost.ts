@@ -11,7 +11,7 @@ export class Jumphost extends ComponentResource {
     readonly instanceId: Output<string>;
 
     constructor(name: string, args: JumphostArgs, opts?: ComponentResourceOptions) {
-        super("pat:Jumphost", name, args, opts);
+        super("pat:vpc:Jumphost", name, args, opts);
 
         const jumphostSubnetId = args.vpc.privateSubnetIds[0];
 

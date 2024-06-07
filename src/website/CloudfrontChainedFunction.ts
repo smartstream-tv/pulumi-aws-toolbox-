@@ -13,7 +13,7 @@ export class CloudfrontChainedFunction extends ComponentResource {
     private resourcesDir: string;
 
     constructor(name: string, args: ChainedCloudfrontFunctionArgs, opts?: ComponentResourceOptions) {
-        super("pat:CloudfrontChainedFunction", name, args, opts);
+        super("pat:website:CloudfrontChainedFunction", name, args, opts);
         this.eventType = args.eventType;
         this.resourcesDir = `${__dirname}/../../resources/cloudfront-function-handlers`;
 

@@ -14,7 +14,7 @@ export class SesProxyMailer extends ComponentResource {
     readonly lambdaName: pulumi.Output<string>;
 
     constructor(name: string, args: SesProxyMailerArgs, opts?: ComponentResourceOptions) {
-        super("pat:SesProxyMailer", name, args, opts);
+        super("pat:ses:SesProxyMailer", name, args, opts);
 
         const logGroup = new aws.cloudwatch.LogGroup(name, {
             name: pulumi.interpolate`/aws/lambda/${name}`,
