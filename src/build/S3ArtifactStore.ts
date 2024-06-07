@@ -28,12 +28,20 @@ export class S3ArtifactStore extends ComponentResource {
             },
             lifecycleRules: [
                 {
-                    id: "delete_old_versions",
-                    enabled: args.expirationDays != undefined,
+                    id: "noncurrentVersionExpiration",
+                    enabled: true,
                     noncurrentVersionExpiration: {
+                        days: 30,
+                    },
+                },
+                ...(args.expirationDays != undefined ? [{
+                    id: "expiration",
+                    enabled: true,
+                    expiration: {
                         days: args.expirationDays,
+                        expiredObjectDeleteMarker: true,
                     }
-                }
+                }] : [])
             ],
             serverSideEncryptionConfiguration: {
                 rule: {
