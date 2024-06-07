@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.6.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.5.0...v0.6.0) (2024-06-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* grouped components into packages
+* introduced S3ArtifactStore. StaticWebsite is no longer implicitly creating a bucket
+
+### Features
+
+* introduced S3ArtifactStore. StaticWebsite is no longer implicitly creating a bucket ([9380002](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/938000291a18ef34d203bfaba81358d2a01fee0b))
+
+
+### Miscellaneous Chores
+
+* grouped components into packages ([78a8443](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/78a84430eb23f161b053ec418d08673d2589bd97))
+
 ## [0.5.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.4.1...v0.5.0) (2024-06-06)
 
 
