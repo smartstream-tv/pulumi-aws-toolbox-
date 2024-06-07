@@ -1,3 +1,5 @@
+import * as build from "./build";
+
 export { init } from "./util/aws";
 export * from "./util/ssm";
 
@@ -8,3 +10,5 @@ export * from "./vpc/StdSecurityGroup";
 export * from "./vpc/Vpc";
 
 export * from "./website/StaticWebsite";
+
+export { build };

@@ -1,29 +1,29 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
-import { getAccountId } from "../util/aws";
+import { S3Artifact } from "../build/S3Artifact";
 import { CloudfrontChainedFunction } from "./CloudfrontChainedFunction";
 
 /**
  * Optionionated way of building a static website using CloudFront and S3.
+ * 
+ * Primarily, assets are loaded from an assets bucket. This bucket must be provided by you. Useful if
+ *  - the bucket should be shared by several dev stacks and must therefore already exist during the CI build phase.
+ *  - additional settings/permissions should configured for the bucket (like cross-account access from prod)
  */
 export class StaticWebsite extends ComponentResource {
-    readonly assetsBucketName: pulumi.Output<string>;
     readonly name: string;
     readonly domain: pulumi.Output<string>;
 
+    private args: WebsiteArgs;
+    private distribution: aws.cloudfront.Distribution;
+
     constructor(name: string, args: WebsiteArgs, opts?: ComponentResourceOptions) {
         super("pat:StaticWebsite", name, args, opts);
+        this.args = args;
         this.name = name;
 
-        const assetsBucket = args.assetsBucket || this.createAssetsBucket();
-        this.assetsBucketName = assetsBucket.bucket;
-
-        const assetsBucketPublicAccess = args.assetsBucket ? null : new aws.s3.BucketPublicAccessBlock(`${this.name}`, {
-            bucket: assetsBucket.id,
-            blockPublicAcls: true,
-            ignorePublicAcls: true,
-        }, { parent: this });
+        if (args.integrations) throw new Error("integrations not yet implemented");
 
         const zone = aws.route53.Zone.get("zone", args.hostedZoneId);
         this.domain = args.subDomain ? pulumi.interpolate`${args.subDomain}.${zone.name}` : zone.name;
@@ -94,12 +94,12 @@ export class StaticWebsite extends ComponentResource {
             functionAssociations: [viewerRequestFunc.toAssociation(), immutableResponseFunc.toAssociation()],
         }));
 
-        const distribution = new aws.cloudfront.Distribution(name, {
+        this.distribution = new aws.cloudfront.Distribution(name, {
             origins: [{
                 originId: assetsOriginId,
-                domainName: assetsBucket.bucketRegionalDomainName,
+                domainName: args.assets.bucket.bucketRegionalDomainName,
                 originAccessControlId: oac.id,
-                originPath: args.assetsPath,
+                originPath: args.assets.path,
             }],
             originGroups: [],
             enabled: true,
@@ -135,13 +135,7 @@ export class StaticWebsite extends ComponentResource {
             ]
         }, { parent: this });
 
-        // grant access to assets
-        if (args.assetsBucket == null) {
-            new aws.s3.BucketPolicy(`${name}`, {
-                bucket: assetsBucket.id,
-                policy: this.getBucketReadPolicy(assetsBucket, `${args.assetsPath}/*`, distribution),
-            }, { parent: this, dependsOn: [assetsBucketPublicAccess!] });
-        }
+        this.args.assets.requestCloudfrontReadAccess(this.distribution.arn);
 
         // DNS records
         const cloudfrontZoneId = "Z2FDTNDATAQYW2";
@@ -151,7 +145,7 @@ export class StaticWebsite extends ComponentResource {
             type: "A",
             aliases: [{
                 zoneId: cloudfrontZoneId,
-                name: distribution.domainName,
+                name: this.distribution.domainName,
                 evaluateTargetHealth: false
             }]
         }, { parent: this });
@@ -161,88 +155,32 @@ export class StaticWebsite extends ComponentResource {
             type: "AAAA",
             aliases: [{
                 zoneId: cloudfrontZoneId,
-                name: distribution.domainName,
+                name: this.distribution.domainName,
                 evaluateTargetHealth: false
             }]
         }, { parent: this });
     }
-
-    private createAssetsBucket() {
-        const bucket = new aws.s3.Bucket(`${this.name}`, {
-            bucket: `${this.name}-${getAccountId()}`,
-            versioning: {
-                enabled: true
-            },
-            lifecycleRules: [
-                {
-                    id: "delete_old_versions",
-                    enabled: true,
-                    noncurrentVersionExpiration: {
-                        days: 90,
-                    }
-                }
-            ],
-            serverSideEncryptionConfiguration: {
-                rule: {
-                    applyServerSideEncryptionByDefault: {
-                        sseAlgorithm: "AES256",
-                    },
-                }
-            },
-        }, { parent: this });
-
-        return bucket;
-    }
-
-    private getBucketReadPolicy(bucket: aws.s3.Bucket, path: string, distribution: aws.cloudfront.Distribution) {
-        const policyDoc = aws.iam.getPolicyDocumentOutput({
-            statements: [{
-                sid: `CloudFront-Read-${path}`,
-                principals: [{
-                    type: "Service",
-                    identifiers: ["cloudfront.amazonaws.com"],
-                }],
-                actions: [
-                    "s3:GetObject",
-                    "s3:ListBucket",
-                ],
-                resources: [
-                    pulumi.interpolate`${bucket.arn}`,
-                    pulumi.interpolate`${bucket.arn}${path}`,
-                ],
-                conditions: [
-                    {
-                        test: "StringEquals",
-                        variable: "AWS:SourceArn",
-                        values: [distribution.arn],
-                    }
-                ],
-            }]
-        });
-        return policyDoc.apply(policyDoc => policyDoc.json);
-    }
-
 }
 
 
 export interface WebsiteArgs {
     /**
-     * ARN of the HTTPS certifiacte.
+     * ARN of the HTTPS certificate. The ACM certificate must be created in the us-east-1 region!
      */
     readonly acmCertificateArn_usEast1: string;
 
     /**
-     * Optionally, overwrites the bucket to be used for assets.
-     * Useful if bucket should be shared by several dev stacks and must exist for CI during build phase.
+     * A S3 bucket location with the default assets that should be delivered.
+     * 
+     * You must make sure the bucket as a resource policy that allows read access from CloudFront.
+     * Can be done by implementing S3Artifact:requestCloudfrontReadAccess.
      */
-    readonly assetsBucket?: aws.s3.Bucket;
+    readonly assets: S3Artifact;
 
     /**
-     * The path inside the assets bucket from where the website's static files should be loaded from.
-     * Must start with a slash.
-     * Example: "/frontend/abcd1234/"
+     * Integrates additional assets using CloudFront cache behaviours.
      */
-    readonly assetsPath: string;
+    readonly integrations?: (SingleAssetIntegration | BucketIntegration | ApiIntegration)[];
 
     /**
      * Optionally, protects the website with HTTP basic auth.
@@ -258,6 +196,23 @@ export interface WebsiteArgs {
     readonly hostedZoneId: string;
 
     readonly subDomain?: string;
+}
+
+export interface SingleAssetIntegration {
+    readonly path: string;
+    readonly content: string | pulumi.Output<string>;
+    readonly contentType: string;
+}
+
+export interface BucketIntegration {
+    readonly pathPattern: string;
+    readonly artifact: S3Artifact;
+    readonly immutable: boolean;
+}
+
+export interface ApiIntegration {
+    readonly pathPattern: string;
+    readonly originDomain: pulumi.Output<string>;
 }
 
 export interface BasicAuthArgs {
