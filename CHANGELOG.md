@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.6.0...v0.7.0) (2024-06-07)
+
+
+### Features
+
+* integration of single assets ([f41ec09](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/f41ec0994995c982959523a3ec64d3ee79c835a2))
+
+
+### Bug Fixes
+
+* correctly expiring artifacts ([1ce68a4](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/1ce68a4c4c1d423daa8b48d0c994532bef9f0448))
+
 ## [0.6.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.5.0...v0.6.0) (2024-06-07)
 
 
