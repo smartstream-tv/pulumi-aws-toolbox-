@@ -23,8 +23,6 @@ export class StaticWebsite extends ComponentResource {
         this.args = args;
         this.name = name;
 
-        if (args.integrations) throw new Error("integrations not yet implemented");
-
         const zone = aws.route53.Zone.get("zone", args.hostedZoneId);
         this.domain = args.subDomain ? pulumi.interpolate`${args.subDomain}.${zone.name}` : zone.name;
 
@@ -94,13 +92,42 @@ export class StaticWebsite extends ComponentResource {
             functionAssociations: [viewerRequestFunc.toAssociation(), immutableResponseFunc.toAssociation()],
         }));
 
+        // aux bucket
+        const auxBucket = new aws.s3.Bucket(`${name}-aux`, {}, { parent: this });
+        const auxBucketPublicAccess = new aws.s3.BucketPublicAccessBlock(`${name}-aux`, {
+            bucket: auxBucket.id,
+            blockPublicAcls: true,
+            ignorePublicAcls: true,
+        }, { parent: this });
+        const integrations = args.integrations || [];
+
         this.distribution = new aws.cloudfront.Distribution(name, {
-            origins: [{
-                originId: assetsOriginId,
-                domainName: args.assets.bucket.bucketRegionalDomainName,
-                originAccessControlId: oac.id,
-                originPath: args.assets.path,
-            }],
+            origins: [
+                {
+                    originId: assetsOriginId,
+                    domainName: args.assets.bucket.bucketRegionalDomainName,
+                    originAccessControlId: oac.id,
+                    originPath: args.assets.path,
+                },
+                ...(integrations.map((integration, index) => {
+                    switch (integration.type) {
+                        case "SingleAssetIntegration":
+                            new aws.s3.BucketObject(`${name}-${integration.path}`, {
+                                bucket: auxBucket,
+                                key: `single-asset${integration.path}`,
+                                content: integration.content,
+                                contentType: integration.contentType
+                            });
+                            return {
+                                originId: `integration-${index}`,
+                                domainName: auxBucket.bucketRegionalDomainName,
+                                originAccessControlId: oac.id,
+                                originPath: `/single-asset`,
+                            };
+                    }
+                    throw new Error(`Unsupported integration ${integration.type}`);
+                }))
+            ],
             originGroups: [],
             enabled: true,
             isIpv6Enabled: true,
@@ -113,6 +140,18 @@ export class StaticWebsite extends ComponentResource {
                 functionAssociations: [viewerRequestFunc.toAssociation(), mutableResponseFunc.toAssociation()],
             },
             orderedCacheBehaviors: [
+                ...(integrations.map((integration, index) => {
+                    switch (integration.type) {
+                        case "SingleAssetIntegration":
+                            return {
+                                ...stdCacheBehavior(),
+                                pathPattern: integration.path,
+                                targetOriginId: `integration-${index}`,
+                                functionAssociations: [viewerRequestFunc.toAssociation(), mutableResponseFunc.toAssociation()],
+                            };
+                    }
+                    throw new Error(`Unsupported integration ${integration.type}`);
+                })),
                 ...immutableCacheBehaviors
             ],
             priceClass: "PriceClass_100",
@@ -135,7 +174,40 @@ export class StaticWebsite extends ComponentResource {
             ]
         }, { parent: this });
 
+        // read access to assets bucket
         this.args.assets.requestCloudfrontReadAccess(this.distribution.arn);
+
+        // read access to aux bucket
+        new aws.s3.BucketPolicy(this.name, {
+            bucket: auxBucket.id,
+            policy: aws.iam.getPolicyDocumentOutput({
+                statements: [{
+                    sid: `CloudFront-Read`,
+                    principals: [{
+                        type: "Service",
+                        identifiers: ["cloudfront.amazonaws.com"],
+                    }],
+                    actions: [
+                        "s3:GetObject",
+                        "s3:ListBucket",
+                    ],
+                    resources: [
+                        pulumi.interpolate`${auxBucket.arn}`,
+                        pulumi.interpolate`${auxBucket.arn}/*`,
+                    ],
+                    conditions: [
+                        {
+                            test: "StringEquals",
+                            variable: "AWS:SourceArn",
+                            values: [this.distribution.arn],
+                        }
+                    ],
+                }],
+            }).json,
+        }, {
+            parent: this,
+            dependsOn: [auxBucketPublicAccess]
+        });
 
         // DNS records
         const cloudfrontZoneId = "Z2FDTNDATAQYW2";
@@ -195,22 +267,31 @@ export interface WebsiteArgs {
 
     readonly hostedZoneId: string;
 
+    /**
+     * The subdomain within the hosted zone or null if the zone apex should be used.
+     */
     readonly subDomain?: string;
 }
 
-export interface SingleAssetIntegration {
+export type SingleAssetIntegration = {
+    readonly type: "SingleAssetIntegration";
+    /**
+     * Must start with a slash.
+     */
     readonly path: string;
     readonly content: string | pulumi.Output<string>;
     readonly contentType: string;
 }
 
-export interface BucketIntegration {
+export type BucketIntegration = {
+    readonly type: "BucketIntegration";
     readonly pathPattern: string;
     readonly artifact: S3Artifact;
     readonly immutable: boolean;
 }
 
-export interface ApiIntegration {
+export type ApiIntegration = {
+    readonly type: "ApiIntegration";
     readonly pathPattern: string;
     readonly originDomain: pulumi.Output<string>;
 }

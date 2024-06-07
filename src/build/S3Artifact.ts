@@ -15,4 +15,13 @@ export interface S3Artifact {
     readonly path: string;
 
     requestCloudfrontReadAccess(distributionArn: pulumi.Output<string>): void;
+
+}
+
+export function getS3Artifact(bucket: aws.s3.Bucket, path: string): S3Artifact {
+    return {
+        bucket,
+        path,
+        requestCloudfrontReadAccess: () => {}
+    };
 }
