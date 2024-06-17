@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.7.0...v0.8.0) (2024-06-17)
+
+
+### Features
+
+* added SimpleNodeLambda, more docs ([066738d](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/066738dbbd986daf56f62655709fbaa07ef7a50c))
+
 ## [0.7.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.6.0...v0.7.0) (2024-06-07)
 
 
