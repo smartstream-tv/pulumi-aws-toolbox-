@@ -1,6 +1,6 @@
 import * as aws from "@pulumi/aws";
 import { ComponentResource, ComponentResourceOptions, Output } from "@pulumi/pulumi";
-import { Vpc } from "./Vpc";
+import { IVpc } from "./Vpc";
 
 /**
  * A simple security group for many standard cases.
@@ -58,5 +58,5 @@ export class StdSecurityGroup extends ComponentResource {
 export interface StdSecurityGroupArgs {
     readonly ingressPorts: number[];
     readonly publicIngress: boolean;
-    readonly vpc: Vpc;
+    readonly vpc: IVpc;
 }

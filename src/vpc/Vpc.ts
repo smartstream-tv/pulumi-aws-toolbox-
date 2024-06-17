@@ -18,7 +18,7 @@ import { getRegion } from "../util/aws";
  *  - cannot be reached from the internet
  *  - can communicate to the internet only via IPv6
  */
-export class Vpc extends ComponentResource {
+export class Vpc extends ComponentResource implements IVpc {
     readonly cidrIpv4: string;
     readonly cidrIpv6: Output<string>;
     readonly ipv4MaskBits: number;
@@ -254,4 +254,15 @@ export interface NetworkArgs {
      * Default: 22
      */
     readonly ipv4MaskBits?: number;
+}
+
+/**
+ * VPC interface to support other VPC components as well like awsx Crosswalk.
+ */
+export interface IVpc {
+    readonly cidrIpv4: pulumi.Input<string>;
+    readonly cidrIpv6: pulumi.Input<string>;
+    readonly privateSubnetIds: pulumi.Input<string>[];
+    readonly publicSubnetIds: pulumi.Input<string>[];
+    readonly vpcId: pulumi.Input<string>;
 }

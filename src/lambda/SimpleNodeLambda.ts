@@ -2,6 +2,7 @@ import * as aws from "@pulumi/aws";
 import * as awsInputs from "@pulumi/aws/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
+import { IVpc, StdSecurityGroup } from "../vpc";
 
 /**
  * Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
@@ -30,11 +31,25 @@ export class SimpleNodeLambda extends ComponentResource {
                 }]
             }),
             managedPolicyArns: [
-                aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole,
+                (args.vpc != undefined ? aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole : aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole),
                 ...(args.roleManagedPolicies ?? []),
             ],
             inlinePolicies: args.roleInlinePolicies,
         }, { parent: this });
+
+        const vpcConfig = args.vpc != undefined ? (() => {
+            const sg = new StdSecurityGroup(name, {
+                vpc: args.vpc,
+                ingressPorts: [],
+                publicIngress: false,
+            });
+
+            return {
+                subnetIds: args.vpc.privateSubnetIds,
+                securityGroupIds: [sg.securityGroupId],
+                ipv6AllowedForDualStack: true,
+            };
+        })() : undefined;
 
         const func = new aws.lambda.Function(name, {
             description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
@@ -49,6 +64,7 @@ export class SimpleNodeLambda extends ComponentResource {
             environment: {
                 variables: args.environmentVariables,
             },
+            vpcConfig,
         }, {
             dependsOn: [logGroup],
             parent: this
@@ -66,6 +82,13 @@ export interface SimpleNodeLambdaArgs {
      */
     codeDir: string;
 
+    /**
+     * Map of environment variables for the function.
+     */
+    environmentVariables?: pulumi.Input<{
+        [key: string]: pulumi.Input<string>;
+    }>;
+
     roleInlinePolicies?: pulumi.Input<pulumi.Input<awsInputs.iam.RoleInlinePolicy>[]>;
 
     /**
@@ -74,9 +97,7 @@ export interface SimpleNodeLambdaArgs {
     roleManagedPolicies?: aws.ARN[];
 
     /**
-     * Map of environment variables for the function.
+     * If specified, the Lambda will created using the VPC's private subnets.
      */
-    environmentVariables?: pulumi.Input<{
-        [key: string]: pulumi.Input<string>;
-    }>;
+    vpc?: IVpc;
 }
