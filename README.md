@@ -29,8 +29,8 @@ Resources in a private subnet can communicate to the internet only via IPv6 and 
 
 ### pulumi-s3-login
 By convention we're using Pulumi's S3 backend, with a bucket named "pulumi-state-{AWS_ACCOUNT_ID}".
-If you install the pulumi-aws-toolbox globally you can invoke
+You can configure Pulumi to use this bucket by running
 
-    pulumi-s3-login
+    npx pulumi-s3-login
 
-to configure Pulumi to use the bucket of your current AWS account. The bucket must already exist.
+This will configure Pulumi to use the bucket of your current AWS account. The bucket must already exist.
