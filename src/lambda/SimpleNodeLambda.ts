@@ -58,6 +58,7 @@ export class SimpleNodeLambda extends ComponentResource {
             }),
             handler: `index.handler`,
             runtime: aws.lambda.Runtime.NodeJS20dX,
+            architectures: ["arm64"],
             role: role.arn,
             memorySize: 128,
             timeout: 60,
