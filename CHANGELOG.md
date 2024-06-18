@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.0...v0.9.1) (2024-06-18)
+
+
+### Bug Fixes
+
+* SimpleNodeLambda using arm64 arch by default ([9e6b52d](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/9e6b52d2830f21ff647f1ec2f674fd4d2aa8a253))
+
 ## [0.9.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.8.0...v0.9.0) (2024-06-17)
 
 
