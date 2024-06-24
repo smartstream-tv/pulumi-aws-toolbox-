@@ -60,8 +60,8 @@ export class SimpleNodeLambda extends ComponentResource {
             runtime: aws.lambda.Runtime.NodeJS20dX,
             architectures: ["arm64"],
             role: role.arn,
-            memorySize: 128,
-            timeout: 60,
+            memorySize: args.memorySize ?? 128,
+            timeout: args.timeout ?? 60,
             environment: {
                 variables: args.environmentVariables,
             },
@@ -90,6 +90,11 @@ export interface SimpleNodeLambdaArgs {
         [key: string]: pulumi.Input<string>;
     }>;
 
+    /**
+     * Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits](https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
+     */
+    memorySize?: number;
+
     roleInlinePolicies?: pulumi.Input<pulumi.Input<awsInputs.iam.RoleInlinePolicy>[]>;
 
     /**
@@ -98,7 +103,13 @@ export interface SimpleNodeLambdaArgs {
     roleManagedPolicies?: aws.ARN[];
 
     /**
+     * Amount of time your Lambda Function has to run in seconds. Defaults to `60`.
+     */
+    timeout?: number;
+
+    /**
      * If specified, the Lambda will created using the VPC's private subnets.
      */
     vpc?: IVpc;
+    
 }
