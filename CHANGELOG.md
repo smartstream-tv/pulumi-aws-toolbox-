@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.1...v0.9.2) (2024-06-24)
+
+
+### Bug Fixes
+
+* added memorySize, timeout to SimpleNodeLambda ([aada2ad](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/aada2ad0232f583bd01389f91fbb4840c8c5a943))
+
 ## [0.9.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.0...v0.9.1) (2024-06-18)
 
 
