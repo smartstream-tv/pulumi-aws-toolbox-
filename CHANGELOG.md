@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.3...v0.9.4) (2024-06-28)
+
+
+### Bug Fixes
+
+* added missing export ([290827d](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/290827d209882c33a596cc6db0c847a67580bb9c))
+
 ## [0.9.3](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.2...v0.9.3) (2024-06-28)
 
 
