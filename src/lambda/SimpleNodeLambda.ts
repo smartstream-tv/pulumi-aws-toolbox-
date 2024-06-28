@@ -1,74 +1,38 @@
 import * as aws from "@pulumi/aws";
 import * as awsInputs from "@pulumi/aws/types/input";
 import * as pulumi from "@pulumi/pulumi";
-import { ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
-import { IVpc, StdSecurityGroup } from "../vpc";
-import { assumeRolePolicyForAwsService } from "../util/iam";
+import { ComponentResourceOptions } from "@pulumi/pulumi";
+import { IVpc } from "../vpc";
+import { BaseLambda } from "./BaseLambda";
 
 /**
  * Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
  */
-export class SimpleNodeLambda extends ComponentResource {
-    readonly functionArn: pulumi.Output<string>;
-    readonly functionName: pulumi.Output<string>;
-
+export class SimpleNodeLambda extends BaseLambda {
     constructor(name: string, args: SimpleNodeLambdaArgs, opts?: ComponentResourceOptions) {
-        super("pat:lambda:SimpleNodeLambda", name, args, opts);
-
-        const logGroup = new aws.cloudwatch.LogGroup(name, {
-            name: pulumi.interpolate`/aws/lambda/${name}`,
-            retentionInDays: 365,
-        }, { parent: this });
-
-        const role = new aws.iam.Role(name, {
-            assumeRolePolicy: assumeRolePolicyForAwsService("lambda"),
-            managedPolicyArns: [
-                (args.vpc != undefined ? aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole : aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole),
-                ...(args.roleManagedPolicies ?? []),
-            ],
-            inlinePolicies: args.roleInlinePolicies,
-        }, { parent: this });
-
-        const vpcConfig = args.vpc != undefined ? (() => {
-            const sg = new StdSecurityGroup(name, {
-                vpc: args.vpc,
-                ingressPorts: [],
-                publicIngress: false,
-            });
-
-            return {
-                subnetIds: args.vpc.privateSubnetIds,
-                securityGroupIds: [sg.securityGroupId],
-                ipv6AllowedForDualStack: true,
-            };
-        })() : undefined;
-
-        const func = new aws.lambda.Function(name, {
-            description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
-            code: new pulumi.asset.AssetArchive({
-                ".": new pulumi.asset.FileArchive(args.codeDir),
+        super("pat:lambda:SimpleNodeLambda", name, {
+            vpc: args.vpc,
+            build: (logGroup, roleArn, vpcConfig) => ({
+                description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
+                code: new pulumi.asset.AssetArchive({
+                    ".": new pulumi.asset.FileArchive(args.codeDir),
+                }),
+                handler: `index.handler`,
+                runtime: aws.lambda.Runtime.NodeJS20dX,
+                architectures: ["arm64"],
+                role: roleArn,
+                memorySize: args.memorySize ?? 128,
+                timeout: args.timeout ?? 60,
+                environment: {
+                    variables: args.environmentVariables,
+                },
+                vpcConfig,
+                loggingConfig: {
+                    logGroup: logGroup.name,
+                    logFormat: "Text",
+                },
             }),
-            handler: `index.handler`,
-            runtime: aws.lambda.Runtime.NodeJS20dX,
-            architectures: ["arm64"],
-            role: role.arn,
-            memorySize: args.memorySize ?? 128,
-            timeout: args.timeout ?? 60,
-            environment: {
-                variables: args.environmentVariables,
-            },
-            vpcConfig,
-            loggingConfig: {
-                logGroup: logGroup.name,
-                logFormat: "Text",
-            },
-        }, {
-            dependsOn: [logGroup],
-            parent: this
-        });
-
-        this.functionArn = func.arn;
-        this.functionName = func.name;
+        }, opts);
     }
 }
 
@@ -107,5 +71,5 @@ export interface SimpleNodeLambdaArgs {
      * If specified, the Lambda will created using the VPC's private subnets.
      */
     vpc?: IVpc;
-    
+
 }
