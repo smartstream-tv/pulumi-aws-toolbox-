@@ -3,6 +3,7 @@ import * as awsInputs from "@pulumi/aws/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { IVpc, StdSecurityGroup } from "../vpc";
+import { assumeRolePolicyForAwsService } from "../util/iam";
 
 /**
  * Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
@@ -20,16 +21,7 @@ export class SimpleNodeLambda extends ComponentResource {
         }, { parent: this });
 
         const role = new aws.iam.Role(name, {
-            assumeRolePolicy: JSON.stringify({
-                Version: "2012-10-17",
-                Statement: [{
-                    Effect: "Allow",
-                    Principal: {
-                        Service: "lambda.amazonaws.com",
-                    },
-                    Action: "sts:AssumeRole"
-                }]
-            }),
+            assumeRolePolicy: assumeRolePolicyForAwsService("lambda"),
             managedPolicyArns: [
                 (args.vpc != undefined ? aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole : aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole),
                 ...(args.roleManagedPolicies ?? []),
@@ -66,6 +58,10 @@ export class SimpleNodeLambda extends ComponentResource {
                 variables: args.environmentVariables,
             },
             vpcConfig,
+            loggingConfig: {
+                logGroup: logGroup.name,
+                logFormat: "Text",
+            },
         }, {
             dependsOn: [logGroup],
             parent: this
