@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.2...v0.9.3) (2024-06-28)
+
+
+### Bug Fixes
+
+* lambda not using correct log group ([69eb0b5](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/69eb0b5e4ab4275ef16fb8ccb047d2fa7e4d7ad3))
+
 ## [0.9.2](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.1...v0.9.2) (2024-06-24)
 
 
