@@ -13,8 +13,8 @@ export abstract class BaseLambda extends ComponentResource {
     readonly functionArn: pulumi.Output<string>;
     readonly functionName: pulumi.Output<string>;
 
-    constructor(type: string, name: string, args: BaseLambdaArgs, opts?: ComponentResourceOptions) {
-        super(type, name, args, opts);
+    constructor(name: string, args: BaseLambdaArgs, opts?: ComponentResourceOptions, type?: string) {
+        super(type ?? "pat:lambda:BaseLambda", name, args, opts);
 
         const logGroup = new aws.cloudwatch.LogGroup(name, {
             name: pulumi.interpolate`/aws/lambda/${name}`,

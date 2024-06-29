@@ -10,7 +10,7 @@ import { BaseLambda } from "./BaseLambda";
  */
 export class SimpleNodeLambda extends BaseLambda {
     constructor(name: string, args: SimpleNodeLambdaArgs, opts?: ComponentResourceOptions, type?: string) {
-        super(type ?? "pat:lambda:SimpleNodeLambda", name, {
+        super(name, {
             vpc: args.vpc,
             build: (logGroup, roleArn, vpcConfig) => ({
                 description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
@@ -32,7 +32,7 @@ export class SimpleNodeLambda extends BaseLambda {
                     logFormat: "Text",
                 },
             }),
-        }, opts);
+        }, opts, type ?? "pat:lambda:SimpleNodeLambda");
     }
 }
 
