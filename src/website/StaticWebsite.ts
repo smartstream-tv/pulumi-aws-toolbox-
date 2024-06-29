@@ -107,7 +107,7 @@ export class StaticWebsite extends ComponentResource {
                     originId: assetsOriginId,
                     domainName: args.assets.bucket.bucketRegionalDomainName,
                     originAccessControlId: oac.id,
-                    originPath: args.assets.path,
+                    originPath: '/' + args.assets.path,
                 },
                 ...(integrations.map((integration, index) => {
                     switch (integration.type) {
@@ -245,7 +245,7 @@ export interface WebsiteArgs {
      * A S3 bucket location with the default assets that should be delivered.
      * 
      * You must make sure the bucket as a resource policy that allows read access from CloudFront.
-     * Can be done by implementing S3Artifact:requestCloudfrontReadAccess.
+     * If you're using S3ArtifactStore, this can be achieved by calling it's createBucketPolicy method.
      */
     readonly assets: S3Artifact;
 

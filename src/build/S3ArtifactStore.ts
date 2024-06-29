@@ -6,7 +6,7 @@ import { S3Artifact } from "./S3Artifact";
 
 
 /**
- * An abstraction that can be used to store build artifacts in S3.
+ * Creates a S3 bucket where build artifacts can be stored.
  */
 export class S3ArtifactStore extends ComponentResource {
     private args: S3ArtifactStoreArgs;
@@ -59,8 +59,12 @@ export class S3ArtifactStore extends ComponentResource {
         }, { parent: this });
     }
 
+    /**
+     * Returns a S3Artifact object for the given version that links to the storage location in S3.
+     * The referenced artifact may not exist yet at the storage location.
+     */
     getArtifactVersion(version: string): S3Artifact {
-        const path = `/${this.args.artifactName}/${version}`;
+        const path = `${this.args.artifactName}/${version}`;
         return {
             bucket: this.bucket,
             path,
@@ -71,7 +75,7 @@ export class S3ArtifactStore extends ComponentResource {
     }
 
     /**
-     * Creates a bucket resource policy that allows CloudFront to read the artifacts.
+     * Creates a bucket resource policy based on the received read requests.
      */
     createBucketPolicy() {
         new aws.s3.BucketPolicy(this.name, {
@@ -89,7 +93,7 @@ export class S3ArtifactStore extends ComponentResource {
                     ],
                     resources: [
                         pulumi.interpolate`${this.bucket.arn}`,
-                        pulumi.interpolate`${this.bucket.arn}${request.path}/*`,
+                        pulumi.interpolate`${this.bucket.arn}/${request.path}/*`,
                     ],
                     conditions: [
                         {
