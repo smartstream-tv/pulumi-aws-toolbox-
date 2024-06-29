@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.3](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.10.2...v0.10.3) (2024-06-29)
+
+
+### Bug Fixes
+
+* BaseLambda policies not being removed correctly ([32e3496](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/32e3496118d2c5c6a16724a35258dd24ee5115c4))
+
 ## [0.10.2](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.10.1...v0.10.2) (2024-06-29)
 
 
