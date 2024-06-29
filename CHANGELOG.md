@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.4...v0.10.0) (2024-06-29)
+
+
+### Features
+
+* S3Artifact api change, added getS3ArtifactForBucket, better docs ([e6e5762](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/e6e57628c3bee809001901cf0e01a2209d2f99fe))
+
 ## [0.9.4](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.3...v0.9.4) (2024-06-28)
 
 
