@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.10.1...v0.10.2) (2024-06-29)
+
+
+### Bug Fixes
+
+* SimpleNodeLambda didn't add policies. change BaseLambda API ([47ee752](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/47ee752af40ee111f84fb4bc4d4fd8c8746cb925))
+
 ## [0.10.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.10.0...v0.10.1) (2024-06-29)
 
 
