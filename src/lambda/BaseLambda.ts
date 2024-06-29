@@ -7,14 +7,14 @@ import { IVpc, StdSecurityGroup } from "../vpc";
 
 /**
  * Base class that makes it easier to create a AWS Lambda.
- * Creates a log group, role that can be used to construct the actual Function.
+ * Creates a log group, role that can be used to construct the actual lambda function.
  */
 export abstract class BaseLambda extends ComponentResource {
     readonly functionArn: pulumi.Output<string>;
     readonly functionName: pulumi.Output<string>;
 
-    constructor(name: string, args: BaseLambdaArgs, opts?: ComponentResourceOptions, type?: string) {
-        super(type ?? "pat:lambda:BaseLambda", name, args, opts);
+    constructor(type: string, name: string, args: BaseLambdaArgs, opts: ComponentResourceOptions, functionArgsFactory: FunctionArgsFactory) {
+        super(type, name, args, opts);
 
         const logGroup = new aws.cloudwatch.LogGroup(name, {
             name: pulumi.interpolate`/aws/lambda/${name}`,
@@ -45,7 +45,7 @@ export abstract class BaseLambda extends ComponentResource {
         })() : undefined;
 
         const func = new aws.lambda.Function(name,
-            args.build(logGroup, role.arn, vpcConfig)
+            functionArgsFactory(logGroup, role.arn, vpcConfig)
             , {
                 dependsOn: [logGroup],
                 parent: this
@@ -57,13 +57,14 @@ export abstract class BaseLambda extends ComponentResource {
 }
 
 export interface BaseLambdaArgs {
-
-    build: (logGroup: aws.cloudwatch.LogGroup, roleArn: pulumi.Input<aws.ARN>, vpcConfig?: aws.types.input.lambda.FunctionVpcConfig) => aws.lambda.FunctionArgs;
-
+    /**
+     * Inline policies for the Lambda function.
+     */
     roleInlinePolicies?: pulumi.Input<pulumi.Input<awsInputs.iam.RoleInlinePolicy>[]>;
 
     /**
-     * Additional managed policys for the lambda. A policy to write to Cloudwatch Logs is added automatically.
+     * Additional managed policys for the lambda function.
+     * Policies to write to the CloudWatch log group and to use the VPC (if relevant) are added automatically.
      */
     roleManagedPolicies?: aws.ARN[];
 
@@ -71,5 +72,6 @@ export interface BaseLambdaArgs {
      * If specified, the Lambda will created using the VPC's private subnets.
      */
     vpc?: IVpc;
-
 }
+
+export type FunctionArgsFactory = (logGroup: aws.cloudwatch.LogGroup, roleArn: pulumi.Input<aws.ARN>, vpcConfig?: aws.types.input.lambda.FunctionVpcConfig) => aws.lambda.FunctionArgs;

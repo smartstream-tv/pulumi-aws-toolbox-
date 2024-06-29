@@ -10,29 +10,26 @@ import { BaseLambda } from "./BaseLambda";
  */
 export class SimpleNodeLambda extends BaseLambda {
     constructor(name: string, args: SimpleNodeLambdaArgs, opts?: ComponentResourceOptions, type?: string) {
-        super(name, {
-            vpc: args.vpc,
-            build: (logGroup, roleArn, vpcConfig) => ({
-                description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
-                code: new pulumi.asset.AssetArchive({
-                    ".": new pulumi.asset.FileArchive(args.codeDir),
-                }),
-                handler: `index.handler`,
-                runtime: aws.lambda.Runtime.NodeJS20dX,
-                architectures: ["arm64"],
-                role: roleArn,
-                memorySize: args.memorySize ?? 128,
-                timeout: args.timeout ?? 60,
-                environment: {
-                    variables: args.environmentVariables,
-                },
-                vpcConfig,
-                loggingConfig: {
-                    logGroup: logGroup.name,
-                    logFormat: "Text",
-                },
+        super(type ?? "pat:lambda:SimpleNodeLambda", name, args, opts ?? {}, (logGroup, roleArn, vpcConfig) => ({
+            description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
+            code: new pulumi.asset.AssetArchive({
+                ".": new pulumi.asset.FileArchive(args.codeDir),
             }),
-        }, opts, type ?? "pat:lambda:SimpleNodeLambda");
+            handler: `index.handler`,
+            runtime: aws.lambda.Runtime.NodeJS20dX,
+            architectures: ["arm64"],
+            role: roleArn,
+            memorySize: args.memorySize ?? 128,
+            timeout: args.timeout ?? 60,
+            environment: {
+                variables: args.environmentVariables,
+            },
+            vpcConfig,
+            loggingConfig: {
+                logGroup: logGroup.name,
+                logFormat: "Text",
+            },
+        }));
     }
 }
 
