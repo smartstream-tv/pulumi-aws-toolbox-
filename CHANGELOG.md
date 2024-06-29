@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.10.0...v0.10.1) (2024-06-29)
+
+
+### Bug Fixes
+
+* BaseLambda optional type parameter ([b0c14ca](https://github.com/smartstream-tv/pulumi-aws-toolbox/commit/b0c14cab77861b623347dd150ebcdafaf57120b1))
+
 ## [0.10.0](https://github.com/smartstream-tv/pulumi-aws-toolbox/compare/v0.9.4...v0.10.0) (2024-06-29)
 
 
