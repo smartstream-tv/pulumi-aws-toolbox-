@@ -34,6 +34,10 @@ Components:
 Components:
 * [SimpleNodeLambda](src/lambda/SimpleNodeLambda.ts): Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
 
+### SES
+Components:
+* [SesProxyMailer](src/ses/SesProxyMailer.ts): Creates a AWS Lambda to send email using SES using IPv6 and/or from another account.
+
 
 ## Scripts
 

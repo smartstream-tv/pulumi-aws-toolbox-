@@ -4,7 +4,7 @@ import { fromUtf8 } from "@aws-sdk/util-utf8-node";
 
 const assumeRoleArn = process.env.ASSUME_ROLE_ARN;
 
-export const handleRequest = async (event, context) => {
+export const handler = async (event, context) => {
     console.log("EVENT", JSON.stringify(event, null, 2));
 
     const ses = await createClient();

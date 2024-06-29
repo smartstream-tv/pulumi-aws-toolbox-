@@ -9,8 +9,8 @@ import { BaseLambda } from "./BaseLambda";
  * Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
  */
 export class SimpleNodeLambda extends BaseLambda {
-    constructor(name: string, args: SimpleNodeLambdaArgs, opts?: ComponentResourceOptions) {
-        super("pat:lambda:SimpleNodeLambda", name, {
+    constructor(name: string, args: SimpleNodeLambdaArgs, opts?: ComponentResourceOptions, type?: string) {
+        super(type ?? "pat:lambda:SimpleNodeLambda", name, {
             vpc: args.vpc,
             build: (logGroup, roleArn, vpcConfig) => ({
                 description: args.codeDir.substring(args.codeDir.lastIndexOf('/') + 1),
