@@ -1,5 +1,4 @@
 import * as aws from "@pulumi/aws";
-import * as awsInputs from "@pulumi/aws/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { assumeRolePolicyForAwsService } from "../util/iam";
@@ -21,14 +20,36 @@ export abstract class BaseLambda extends ComponentResource {
             retentionInDays: 365,
         }, { parent: this });
 
-        const role = new aws.iam.Role(name, {
+        const role = new aws.iam.Role(`${name}-execute`, {
             assumeRolePolicy: assumeRolePolicyForAwsService("lambda"),
-            managedPolicyArns: [
-                (args.vpc != undefined ? aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole : aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole),
-                ...(args.roleManagedPolicies ?? []),
-            ],
-            inlinePolicies: args.roleInlinePolicies,
         }, { parent: this });
+
+        // attach default policy for VPC and logging
+        if (args.vpc != undefined) {
+            new aws.iam.RolePolicyAttachment(`${name}-default`, {
+                role,
+                policyArn: aws.iam.ManagedPolicies.AWSLambdaVPCAccessExecutionRole,
+            });
+        } else {
+            new aws.iam.RolePolicyAttachment(`${name}-default`, {
+                role,
+                policyArn: aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole,
+            });
+        }
+
+        // create user policies - not using 'inlinePolicies' property because removal behavior is exteremly suprising
+        args.roleManagedPolicies?.forEach((policyArn, index) => {
+            new aws.iam.RolePolicyAttachment(`${name}-${index}`, {
+                role,
+                policyArn,
+            });
+        });
+        args.roleInlinePolicies?.forEach(inlinePolicy => {
+            new aws.iam.RolePolicy(`${name}-${inlinePolicy.name}`, {
+                role,
+                policy: inlinePolicy.policy,
+            });
+        });
 
         const vpcConfig = args.vpc != undefined ? (() => {
             const sg = new StdSecurityGroup(name, {
@@ -60,7 +81,7 @@ export interface BaseLambdaArgs {
     /**
      * Inline policies for the Lambda function.
      */
-    roleInlinePolicies?: pulumi.Input<pulumi.Input<awsInputs.iam.RoleInlinePolicy>[]>;
+    roleInlinePolicies?: RoleInlinePolicy[];
 
     /**
      * Additional managed policys for the lambda function.
@@ -75,3 +96,14 @@ export interface BaseLambdaArgs {
 }
 
 export type FunctionArgsFactory = (logGroup: aws.cloudwatch.LogGroup, roleArn: pulumi.Input<aws.ARN>, vpcConfig?: aws.types.input.lambda.FunctionVpcConfig) => aws.lambda.FunctionArgs;
+
+export interface RoleInlinePolicy {
+    /**
+     * Name of the role policy.
+     */
+    name: pulumi.Input<string>;
+    /**
+     * Policy document as a JSON formatted string.
+     */
+    policy: pulumi.Input<string>;
+}

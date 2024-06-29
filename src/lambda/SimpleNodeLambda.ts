@@ -1,9 +1,7 @@
 import * as aws from "@pulumi/aws";
-import * as awsInputs from "@pulumi/aws/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { ComponentResourceOptions } from "@pulumi/pulumi";
-import { IVpc } from "../vpc";
-import { BaseLambda } from "./BaseLambda";
+import { BaseLambda, BaseLambdaArgs } from "./BaseLambda";
 
 /**
  * Creates a Nodejs AWS Lambda with useful defaults for small & simple tasks.
@@ -33,7 +31,7 @@ export class SimpleNodeLambda extends BaseLambda {
     }
 }
 
-export interface SimpleNodeLambdaArgs {
+export interface SimpleNodeLambdaArgs extends BaseLambdaArgs {
     /**
      * A directory with the JS source code to deploy.
      * It must contain a index.js/index.mjs file with a handler function.
@@ -52,21 +50,8 @@ export interface SimpleNodeLambdaArgs {
      */
     memorySize?: number;
 
-    roleInlinePolicies?: pulumi.Input<pulumi.Input<awsInputs.iam.RoleInlinePolicy>[]>;
-
-    /**
-     * Additional managed policys for the lambda. A policy to write to Cloudwatch Logs is added automatically.
-     */
-    roleManagedPolicies?: aws.ARN[];
-
     /**
      * Amount of time your Lambda Function has to run in seconds. Defaults to `60`.
      */
     timeout?: number;
-
-    /**
-     * If specified, the Lambda will created using the VPC's private subnets.
-     */
-    vpc?: IVpc;
-
 }
