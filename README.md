@@ -38,6 +38,10 @@ Components:
 Components:
 * [SesProxyMailer](src/ses/SesProxyMailer.ts): Creates a AWS Lambda to send email using SES using IPv6 and/or from another account.
 
+### Website
+Components:
+* [StaticWebsite](src/website/StaticWebsite.ts): Optionionated way of building a static website using CloudFront and S3.
+
 
 ## Scripts
 

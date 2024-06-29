@@ -7,9 +7,9 @@ import { CloudfrontChainedFunction } from "./CloudfrontChainedFunction";
 /**
  * Optionionated way of building a static website using CloudFront and S3.
  * 
- * Primarily, assets are loaded from an assets bucket. This bucket must be provided by you. Useful if
+ * Primarily, assets are loaded from S3 (specified by a S3Artifact). The bucket must be provided by you. Useful if
  *  - the bucket should be shared by several dev stacks and must therefore already exist during the CI build phase.
- *  - additional settings/permissions should configured for the bucket (like cross-account access from prod)
+ *  - additional settings/permissions should be configured for the bucket (like cross-account access from prod)
  */
 export class StaticWebsite extends ComponentResource {
     readonly name: string;
